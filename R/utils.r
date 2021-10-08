@@ -40,3 +40,23 @@ set_last_value <- function(obj) {
 get_os <- function() switch(.Platform$OS.type,
     windows = 'win',
     unix = if (identical(Sys.info()[['sysname']], 'Darwin')) 'osx' else 'unix')
+
+extract_element_html <- function(html_str) {
+	suppressWarnings(suppressMessages(require(rvest)))
+	html <- xml2::read_html(html_str)
+	body <- html %>% html_element("body")
+	if (length(html_children(body)) < 2) 
+		return("")
+	x <- html_children(body)[2]
+	return(paste(x))
+}
+
+knitr_inject <- function(code) {
+    rmd <- sprintf("```{r}\n%s\n```", code)
+    rmd_file <- tempfile()
+    write(rmd, rmd_file)
+    knitr::knit2html(input=rmd_file, quiet=TRUE, output= paste0(rmd_file, ".html"))
+    render_code <- sprintf('knitr::opts_knit$set(root.dir=getwd());knitr::knit2html(input="%s", envir= .GlobalEnv, quiet=TRUE, output="%s.html");paste(readLines("%s.html"), collapse="\n")', rmd_file, rmd_file, rmd_file)
+    return(render_code)
+}
+

@@ -11,6 +11,7 @@ jupyter_option_defaults <- list(
         'packageIQR',
         'help_files_with_topic'),
     jupyter.plot_mimetypes = c(
+    	'text/html',
         'text/plain',
         'image/png'),
     jupyter.plot_scale = 2,
