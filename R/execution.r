@@ -308,7 +308,7 @@ execute = function(request) {
     log_debug('Executing code: %s', request$content$code)
     
     warn_unicode_on_windows(request$content$code, .self$send_error_msg)
-    knitr_code <- knitr_inject(request$content$code)
+    knitr_code <- knitr_inject(request$content)
     log_debug(knitr_code)
     tryCatch(
         evaluate(

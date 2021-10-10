@@ -45,18 +45,30 @@ extract_element_html <- function(html_str) {
 	suppressWarnings(suppressMessages(require(rvest)))
 	html <- xml2::read_html(html_str)
 	body <- html %>% html_element("body")
-	if (length(html_children(body)) < 2) 
-		return("")
-	x <- html_children(body)[2]
-	return(paste(x))
+	return(paste(body, collapse=" "))
 }
 
-knitr_inject <- function(code) {
+knitr_inject <- function(cell_content) {
+	code <- cell_content$code
+	cell_opts <- cell_content$cell_metadata
+    knitr::opts_chunk$restore()
+	default_opts <- knitr::opts_chunk$get()
+	for (opt in names(cell_opts)) {
+		if (opt %in% names(default_opts)) {
+			default_opts[[opt]] <- cell_opts[[opt]]
+			log_debug("SET knitr OPT:%s=%s", opt, paste(cell_opts[[opt]]))
+		}
+	}
+	default_opts[["echo"]] <- FALSE # Do not echo the code when running in jupyter notebook UI
+	
     rmd <- sprintf("```{r}\n%s\n```", code)
     rmd_file <- tempfile()
     write(rmd, rmd_file)
-    knitr::knit2html(input=rmd_file, quiet=TRUE, output= paste0(rmd_file, ".html"))
-    render_code <- sprintf('knitr::opts_knit$set(root.dir=getwd());knitr::knit2html(input="%s", envir= .GlobalEnv, quiet=TRUE, output="%s.html");paste(readLines("%s.html"), collapse="\n")', rmd_file, rmd_file, rmd_file)
+    #knitr::knit2html(input=rmd_file, quiet=TRUE, output= paste0(rmd_file, ".html"))
+    knitr::opts_chunk$set(default_opts)
+    options(warn=-1)
+    render_code <- sprintf('knitr::opts_knit$set(root.dir=getwd());knitr::knit2html(input="%s", envir= .GlobalEnv, quiet=TRUE, output="%s.html");
+						   paste(readLines("%s.html"), collapse="\n")', rmd_file, rmd_file, rmd_file)
     return(render_code)
 }
 
